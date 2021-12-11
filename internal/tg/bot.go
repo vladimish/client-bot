@@ -33,6 +33,13 @@ func (b *Bot) initUpdatesChannel() (tgbotapi.UpdatesChannel, error) {
 
 func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
-		log.Get().Println(update)
+		if update.Message.IsCommand() {
+			log.Get().Info("Handling command ", update.UpdateID)
+			b.handleCommand(update.Message)
+		} else if update.Message.Text != "" {
+			log.Get().Info("Handling update ", update.UpdateID)
+			b.handleMessage(update.Message)
+		}
+
 	}
 }
