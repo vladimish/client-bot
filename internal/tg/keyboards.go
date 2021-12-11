@@ -14,3 +14,14 @@ func buildMenuKeyboard() *tgbotapi.ReplyKeyboardMarkup {
 	return &keyboard
 }
 
+func buildBackKeyboard() *tgbotapi.ReplyKeyboardMarkup {
+	var buttons [][]tgbotapi.KeyboardButton
+	row1 := tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("⬅"),
+	)
+
+	buttons = append(buttons, row1)
+	keyboard := tgbotapi.NewReplyKeyboard(buttons...)
+
+	return &keyboard
+}

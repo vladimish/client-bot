@@ -5,10 +5,11 @@ import (
 	"github.com/vladimish/client-bot/internal/db"
 	"github.com/vladimish/client-bot/pkg/log"
 	"github.com/vladimish/client-bot/pkg/utils"
+	"time"
 )
 
 func (b *Bot) handleMessage(m *tgbotapi.Message) error {
-	state, _, err := db.GetDB().GetUserState(m.Chat.ID)
+	state, stateData, err := db.GetDB().GetUserState(m.Chat.ID)
 	if err != nil {
 		return err
 	}
@@ -71,6 +72,71 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 		}
 
 		break
+	case "date":
+		if m.Text == "⬅" {
+			err := b.SendMenuMessage(m.Chat.ID, "Меню")
+			if err != nil {
+				return err
+			}
+
+			err = db.GetDB().ChangeUserState(m.Chat.ID, "menu", "")
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+		t, err := utils.ParseDate(m.Text)
+		if err != nil {
+			err := b.SendTextMessage(m.Chat.ID, "Неизвестная команда")
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		err = db.GetDB().ChangeUserState(m.Chat.ID, "time", t.Format(time.ANSIC))
+		if err != nil {
+			return err
+		}
+		err = b.SendBookTimeMessage(m.Chat.ID, "TODO")
+		if err != nil {
+			return err
+		}
+		break
+	case "time":
+		if m.Text == "⬅" {
+			err := b.SendBookDateMessage(m.Chat.ID, "TODO")
+			if err != nil {
+				return err
+			}
+
+			err = db.GetDB().ChangeUserState(m.Chat.ID, "date", "")
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}
+		t, err := time.Parse(time.ANSIC, stateData)
+		startTime, endTime, err := utils.ParseTime(&t, m.Text)
+		if err != nil {
+			err := b.SendTextMessage(m.Chat.ID, "Неизвестная команда")
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		err = b.SendTextMessage(m.Chat.ID, startTime.Format(time.ANSIC)+endTime.Format(time.ANSIC))
+		if err != nil {
+			return err
+		}
+		//TODO: time save
+		err = db.GetDB().ChangeUserState(m.Chat.ID, "menu", "")
+		if err != nil {
+			return err
+		}
+		break
 	}
 
 	return nil
@@ -108,6 +174,16 @@ func (b *Bot) handleCallback(callback *tgbotapi.CallbackQuery) error {
 		if err != nil {
 			return err
 		}
+
+		err = b.SendBookDateMessage(int64(callback.From.ID), "TODO")
+		if err != nil {
+			return err
+		}
+		err = db.GetDB().ChangeUserState(int64(callback.From.ID), "date", "")
+		if err != nil {
+			return err
+		}
+
 		break
 	default:
 		log.Get().Info("Nah")

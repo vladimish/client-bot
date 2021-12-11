@@ -79,3 +79,25 @@ func (b *Bot) SendTableConfirmationMessage(chatId int64, tableName string) error
 
 	return nil
 }
+
+func (b *Bot) SendBookDateMessage(chatId int64, name string) error {
+	msg := tgbotapi.NewMessage(chatId, "Бронирование столика "+name+"\nВведите дату брони в формате ДД.ММ.ГГГГ")
+	msg.ReplyMarkup = buildBackKeyboard()
+	_, err := b.bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Bot) SendBookTimeMessage(chatId int64, name string) error {
+	msg := tgbotapi.NewMessage(chatId, "Бронирование столика "+name+"\nВведите время начала и конца брони в формате ММ:ЧЧ-ММ:ЧЧ")
+	msg.ReplyMarkup = buildBackKeyboard()
+	_, err := b.bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
