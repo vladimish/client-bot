@@ -98,14 +98,14 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
-		err = b.SendBookTimeMessage(m.Chat.ID, "TODO")
+		err = b.SendBookTimeMessage(m.Chat.ID, m.Text)
 		if err != nil {
 			return err
 		}
 		break
 	case "time":
 		if m.Text == "⬅" {
-			err := b.SendBookDateMessage(m.Chat.ID, "TODO")
+			err := b.SendBookDateMessage(m.Chat.ID, "")
 			if err != nil {
 				return err
 			}
@@ -127,10 +127,11 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 			return nil
 		}
 
-		err = b.SendTextMessage(m.Chat.ID, startTime.Format(time.ANSIC)+endTime.Format(time.ANSIC))
+		err = b.SendMenuMessage(m.Chat.ID, startTime.Format(time.ANSIC)+endTime.Format(time.ANSIC))
 		if err != nil {
 			return err
 		}
+
 		//TODO: time save
 		err = db.GetDB().ChangeUserState(m.Chat.ID, "menu", "")
 		if err != nil {
@@ -175,7 +176,7 @@ func (b *Bot) handleCallback(callback *tgbotapi.CallbackQuery) error {
 			return err
 		}
 
-		err = b.SendBookDateMessage(int64(callback.From.ID), "TODO")
+		err = b.SendBookDateMessage(int64(callback.From.ID), "")
 		if err != nil {
 			return err
 		}
