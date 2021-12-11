@@ -3,19 +3,25 @@ package main
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/vladimish/client-bot/internal/cfg"
+	"github.com/vladimish/client-bot/internal/server"
 	"github.com/vladimish/client-bot/internal/tg"
 	"log"
 )
 
 func main() {
+	go server.StartApi()
+
 	// Authorize bot.
 	api, err := Authorize()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	bot := tg.NewBot(api)
-	bot.Start()
+	err = bot.Start()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Authorize() (*tgbotapi.BotAPI, error) {
