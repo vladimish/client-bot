@@ -3,6 +3,7 @@ package tg
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/vladimish/client-bot/internal/db"
+	"github.com/vladimish/client-bot/internal/tt"
 	"github.com/vladimish/client-bot/pkg/log"
 	"github.com/vladimish/client-bot/pkg/utils"
 	"time"
@@ -57,6 +58,10 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 		tableId := utils.ContainsTable(tables, m.Text)
 		if tableId != -1 {
 			err = db.GetDB().CreateBookingCallback(m.Chat.ID, tableId)
+			if err != nil {
+				return err
+			}
+			err = db.GetDB().SaveLastBooked(m.Chat.ID, m.Text)
 			if err != nil {
 				return err
 			}
@@ -127,12 +132,37 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 			return nil
 		}
 
+		name, err := db.GetDB().GetLastBooked(m.Chat.ID)
+		if err != nil {
+			return err
+		}
+
+		valid, err := tt.IsValid(name, startTime, endTime)
+		if err != nil {
+			return err
+		}
+
+		if valid {
+			err = db.GetDB().SaveBooking(m.Chat.ID, name, startTime, endTime)
+			if err != nil {
+				return err
+			}
+			err = b.SendMenuMessage(m.Chat.ID, "Успех! Ваш столик забронирован!")
+			if err != nil {
+				return err
+			}
+		} else {
+			err = b.SendBookTimeMessage(m.Chat.ID, "Извините, в это время столик занят. Попробуйте другое.")
+			if err != nil {
+				return err
+			}
+		}
+
 		err = b.SendMenuMessage(m.Chat.ID, startTime.Format(time.ANSIC)+endTime.Format(time.ANSIC))
 		if err != nil {
 			return err
 		}
 
-		//TODO: time save
 		err = db.GetDB().ChangeUserState(m.Chat.ID, "menu", "")
 		if err != nil {
 			return err

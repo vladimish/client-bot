@@ -1,15 +1,11 @@
 CREATE TABLE db.booking
 (
-    id       INT NOT NULL AUTO_INCREMENT,
-    table_id INT NOT NULL,
-    start    TIMESTAMP,
-    end      TIMESTAMP,
+    id            INT         NOT NULL AUTO_INCREMENT,
+    booking_table VARCHAR(64) NOT NULL,
+    start         BIGINT,
+    end           BIGINT,
+    user_id       BIGINT,
 
     CONSTRAINT id
-        PRIMARY KEY (id),
-
-    CONSTRAINT table_id
-        FOREIGN KEY (table_id) REFERENCES db.tables (id)
-            ON DELETE CASCADE
-            ON UPDATE CASCADE
+        PRIMARY KEY (id)
 );

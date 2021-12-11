@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vladimish/client-bot/internal/models"
 	"github.com/vladimish/client-bot/pkg/log"
+	"time"
 )
 
 func (db *DB) GetAllTables() ([]models.Table, error) {
@@ -54,8 +55,57 @@ func (db *DB) CreateBookingCallback(userId int64, tableId int) error {
 	return err
 }
 
-func (db *DB) GetBookingCallback(userId int64) (tableId string, err error) {
+func (db *DB) GetBookingCallback(userId int64) (tableId int, err error) {
 	query := fmt.Sprintf("SELECT table_id FROM confirmation_callbacks WHERE user_id=%d;", userId)
 	err = db.db.QueryRow(query).Scan(&tableId)
 	return tableId, err
+}
+
+func (db *DB) GetAllBookings(tableName string) ([]models.Booking, error) {
+	res := make([]models.Booking, 0)
+	query := fmt.Sprintf("SELECT id, booking_table, start, end FROM booking WHERE booking_table='%s';", tableName)
+	rows, err := db.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var btid string
+		var id int
+		var start, end int64
+		err = rows.Scan(&id, &btid, &start, &end)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, models.Booking{
+			Id:           id,
+			BookingTable: btid,
+			Start:        time.Unix(start, 0),
+			End:          time.Unix(end, 0),
+		})
+	}
+	err = rows.Close()
+	if err != nil {
+		log.Get().Warning(err)
+	}
+
+	return res, nil
+}
+
+func (db *DB) SaveLastBooked(userId int64, tableName string) error {
+	query := fmt.Sprintf("INSERT INTO last_booked (last_user_id, table_name) VALUES (%d, '%s') ON DUPLICATE KEY UPDATE last_user_id=%d, table_name='%s';", userId, tableName, userId, tableName)
+	_, err := db.db.Exec(query)
+	return err
+}
+
+func (db *DB) GetLastBooked(userId int64) (tableName string, err error) {
+	query := fmt.Sprintf("SELECT table_name FROM last_booked WHERE last_user_id=%d;", userId)
+	err = db.db.QueryRow(query).Scan(&tableName)
+	return tableName, err
+}
+
+func (db *DB) SaveBooking(userId int64, tableName string, start time.Time, end time.Time) error {
+	query := fmt.Sprintf("INSERT INTO booking (user_id, booking_table, start, end) VALUES(%d, '%s', %d, %d);", userId, tableName, start.Unix(), end.Unix())
+	_, err := db.db.Exec(query)
+	return err
 }
