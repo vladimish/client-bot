@@ -48,6 +48,8 @@ func (b *Bot) SendTablesMessage(chatID int64) error {
 		buttons = append(buttons, []tgbotapi.KeyboardButton{tgbotapi.NewKeyboardButton(tables[k].Name)})
 	}
 
+	buttons = append(buttons, []tgbotapi.KeyboardButton{tgbotapi.NewKeyboardButton("⬅")})
+
 	keyboard := tgbotapi.NewReplyKeyboard(buttons...)
 	msg := tgbotapi.NewMessage(chatID, "Список столиков")
 	msg.ReplyMarkup = keyboard
@@ -59,4 +61,8 @@ func (b *Bot) SendTablesMessage(chatID int64) error {
 
 	log.Get().Info("Message sent ", res.MessageID)
 	return nil
+}
+
+func SendTableConfirmationMessage() {
+
 }
