@@ -2,11 +2,11 @@ package utils
 
 import "github.com/vladimish/client-bot/internal/models"
 
-func ContainsTable(tables []models.Table, tableName string) bool {
+func ContainsTable(tables []models.Table, tableName string) int {
 	for i := range tables {
 		if tables[i].Name == tableName {
-			return false
+			return tables[i].Id
 		}
 	}
-	return true
+	return -1
 }

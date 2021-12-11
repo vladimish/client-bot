@@ -6,5 +6,10 @@ CREATE TABLE db.booking
     end      TIMESTAMP,
 
     CONSTRAINT id
-        PRIMARY KEY (id)
+        PRIMARY KEY (id),
+
+    CONSTRAINT table_id
+        FOREIGN KEY (table_id) REFERENCES db.tables (id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE
 );

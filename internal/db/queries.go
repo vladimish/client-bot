@@ -7,7 +7,7 @@ import (
 )
 
 func (db *DB) GetAllTables() ([]models.Table, error) {
-	query := "SELECT `table_name` FROM tables;"
+	query := "SELECT `id`, `table_name` FROM tables;"
 	rows, err := db.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func (db *DB) GetAllTables() ([]models.Table, error) {
 
 	for rows.Next() {
 		table := models.Table{}
-		err := rows.Scan(&table.Name)
+		err := rows.Scan(&table.Id, &table.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -41,4 +41,21 @@ func (db *DB) GetUserState(userId int64) (state string, stateData string, err er
 	query := fmt.Sprintf("SELECT `state`, `state_data` FROM states WHERE user_id = %d;", userId)
 	err = db.db.QueryRow(query).Scan(&state, &stateData)
 	return state, stateData, err
+}
+
+func (db *DB) CreateBookingCallback(userId int64, tableId int) error {
+	query1 := fmt.Sprintf("DELETE FROM confirmation_callbacks WHERE user_id=%d;", userId)
+	query2 := fmt.Sprintf("INSERT INTO confirmation_callbacks (user_id, table_id) VALUES (%d, %d);", userId, tableId)
+	_, err := db.db.Exec(query1)
+	if err != nil {
+		return err
+	}
+	_, err = db.db.Exec(query2)
+	return err
+}
+
+func (db *DB) GetBookingCallback(userId int64) (tableId string, err error) {
+	query := fmt.Sprintf("SELECT table_id FROM confirmation_callbacks WHERE user_id=%d;", userId)
+	err = db.db.QueryRow(query).Scan(&tableId)
+	return tableId, err
 }

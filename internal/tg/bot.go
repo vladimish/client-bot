@@ -33,7 +33,13 @@ func (b *Bot) initUpdatesChannel() (tgbotapi.UpdatesChannel, error) {
 
 func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 	for update := range updates {
-		if update.Message.IsCommand() {
+		if update.CallbackQuery != nil {
+			log.Get().Info("Handling callback ", update.UpdateID)
+			err := b.handleCallback(update.CallbackQuery)
+			if err != nil {
+				log.Get().Warning(err)
+			}
+		} else if update.Message.IsCommand() {
 			log.Get().Info("Handling command ", update.UpdateID)
 			err := b.handleCommand(update.Message)
 			if err != nil {
@@ -46,6 +52,5 @@ func (b *Bot) handleUpdates(updates tgbotapi.UpdatesChannel) {
 				log.Get().Warning(err)
 			}
 		}
-
 	}
 }

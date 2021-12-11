@@ -63,6 +63,19 @@ func (b *Bot) SendTablesMessage(chatID int64) error {
 	return nil
 }
 
-func SendTableConfirmationMessage() {
+func (b *Bot) SendTableConfirmationMessage(chatId int64, tableName string) error {
+	msg := tgbotapi.NewMessage(chatId, tableName)
+	keyboard := tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData("Подтвердить бронирование", "confirmation"),
+		),
+	)
 
+	msg.ReplyMarkup = keyboard
+	_, err := b.bot.Send(msg)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -3,6 +3,7 @@ package tg
 import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/vladimish/client-bot/internal/db"
+	"github.com/vladimish/client-bot/pkg/log"
 	"github.com/vladimish/client-bot/pkg/utils"
 )
 
@@ -52,8 +53,16 @@ func (b *Bot) handleMessage(m *tgbotapi.Message) error {
 			return err
 		}
 
-		if utils.ContainsTable(tables, m.Text) {
-			// TODO build callback
+		tableId := utils.ContainsTable(tables, m.Text)
+		if tableId != -1 {
+			err = db.GetDB().CreateBookingCallback(m.Chat.ID, tableId)
+			if err != nil {
+				return err
+			}
+			err = b.SendTableConfirmationMessage(m.Chat.ID, m.Text)
+			if err != nil {
+				return err
+			}
 		} else {
 			err := b.SendTextMessage(m.Chat.ID, "Столик не найден")
 			if err != nil {
@@ -79,6 +88,29 @@ func (b *Bot) handleCommand(m *tgbotapi.Message) error {
 		if err != nil {
 			return err
 		}
+		break
+	}
+
+	return nil
+}
+
+func (b *Bot) handleCallback(callback *tgbotapi.CallbackQuery) error {
+	switch callback.Data {
+	case "confirmation":
+		_, err := db.GetDB().GetBookingCallback(int64(callback.From.ID))
+		if err != nil {
+			return err
+		}
+
+		log.Get().Info(callback)
+		cfg := tgbotapi.NewCallback(callback.ID, "OK")
+		_, err = b.bot.AnswerCallbackQuery(cfg)
+		if err != nil {
+			return err
+		}
+		break
+	default:
+		log.Get().Info("Nah")
 		break
 	}
 

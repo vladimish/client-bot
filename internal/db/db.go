@@ -24,7 +24,7 @@ func GetDB() *DB {
 }
 
 func newDB() (*DB, error) {
-	db, err := sql.Open("mysql", cfg.GetConfig().DBUser+":"+cfg.GetConfig().DBPass+"@tcp("+ cfg.GetConfig().DBAddr +  ")" +"/db")
+	db, err := sql.Open("mysql", cfg.GetConfig().DBUser+":"+cfg.GetConfig().DBPass+"@tcp("+cfg.GetConfig().DBAddr+")"+"/db")
 	if err != nil {
 		return nil, err
 	}
